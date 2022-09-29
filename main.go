@@ -13,12 +13,32 @@ import (
 
 const GRAPHHOPPER_API_KEY = "c7e2a639-9ca1-4745-ae35-2cb8b3f9667b"
 const OPENWEATHER_API_KEY = "844d933d6725aee705f0914bce0bd024"
+const OPENTRIPMAP_API_KEY = "5ae2e3f221c38a28845f05b69a9339aad3d316264e2201f22b172ac8"
+
+func narrator(xid string) {
+	r := getNarratorStory(xid)
+	ns := parseNarratorStory(r)
+	if ns.Name == "" {
+		return
+	}
+	if ns.Info.Descr == "" {
+		ns.Info.Descr = "No Description"
+	}
+	fmt.Printf("Interesting place: %s\n Drescription: %s\n\n", ns.Name, ns.Info.Descr)
+}
+
+func guide(p Structs.Place) {
+	r := getNearPlaces(p)
+	otp := parseOpentripmap(r)
+	for i := 0; i < len(otp.Features); i++ {
+		go narrator(otp.Features[i].Properties.Xid)
+	}
+}
 
 func weatherForecaster(p Structs.Place) {
 	r := getWeatherJson(p)
 	w := parseWeatherJson(r)
 	printWeather(w)
-
 }
 
 func main() {
@@ -29,7 +49,8 @@ func main() {
 	printPlacesToUser(p)
 	cp := choosePlaceFromConsole(p)
 	go weatherForecaster(cp)
-	time.Sleep(10 * time.Second)
+	go guide(cp)
+	time.Sleep(100 * time.Second)
 }
 
 func getQueryName() string {
@@ -137,6 +158,53 @@ func parseWeatherJson(r *http.Response) Structs.Weather {
 }
 
 func printWeather(w Structs.Weather) {
-	fmt.Println("WEATHER:")
-	fmt.Printf("Temp: %.1f,Humidity: %d,Wind speed: %.1fm/s", w.Main.Temp-273.15, w.Main.Humidity, w.Wind.Speed)
+	fmt.Println("WEATHER START:")
+	fmt.Printf("Temp: %.1f,Humidity: %d,Wind speed: %.1fm/s\n", w.Main.Temp-273.15, w.Main.Humidity, w.Wind.Speed)
+	fmt.Println("WEATHER END.")
+}
+
+func getNearPlaces(p Structs.Place) *http.Response {
+	lat := fmt.Sprintf("%f", p.Point.Lat)
+	lng := fmt.Sprintf("%f", p.Point.Lng)
+	resp, err := http.Get("https://api.opentripmap.com/0.1/en/places/radius?radius=10000&lon=" + lng + "&lat=" + lat + "&apikey=" + OPENTRIPMAP_API_KEY)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return resp
+}
+
+func parseOpentripmap(r *http.Response) Structs.Opentripmap {
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var otp Structs.Opentripmap
+	err = json.Unmarshal(b, &otp)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return otp
+}
+
+func getNarratorStory(xid string) *http.Response {
+	resp, err := http.Get("https://api.opentripmap.com/0.1/en/places/xid/" + xid + "?apikey=5ae2e3f221c38a28845f05b69a9339aad3d316264e2201f22b172ac8")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return resp
+}
+
+func parseNarratorStory(r *http.Response) Structs.NarratorStory {
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var ns Structs.NarratorStory
+	err = json.Unmarshal(b, &ns)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return ns
 }

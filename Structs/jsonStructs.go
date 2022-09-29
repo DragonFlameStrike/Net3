@@ -80,3 +80,63 @@ type Weather struct {
 	Name     string `json:"name"`
 	Cod      int    `json:"cod"`
 }
+
+type Opentripmap struct {
+	Type     string `json:"type"`
+	Features []struct {
+		Type     string `json:"type"`
+		Id       string `json:"id"`
+		Geometry struct {
+			Type        string    `json:"type"`
+			Coordinates []float64 `json:"coordinates"`
+		} `json:"geometry"`
+		Properties struct {
+			Xid   string  `json:"xid"`
+			Name  string  `json:"name"`
+			Dist  float64 `json:"dist"`
+			Rate  int     `json:"rate"`
+			Osm   string  `json:"osm,omitempty"`
+			Kinds string  `json:"kinds"`
+		} `json:"properties"`
+	} `json:"features"`
+}
+
+type NarratorStory struct {
+	Xid     string `json:"xid"`
+	Name    string `json:"name"`
+	Address struct {
+		City          string `json:"city"`
+		Road          string `json:"road"`
+		State         string `json:"state"`
+		County        string `json:"county"`
+		Country       string `json:"country"`
+		Postcode      string `json:"postcode"`
+		CountryCode   string `json:"country_code"`
+		HouseNumber   string `json:"house_number"`
+		Neighbourhood string `json:"neighbourhood"`
+	} `json:"address"`
+	Rate    string `json:"rate"`
+	Kinds   string `json:"kinds"`
+	Sources struct {
+		Geometry   string   `json:"geometry"`
+		Attributes []string `json:"attributes"`
+	} `json:"sources"`
+	Otm  string `json:"otm"`
+	Info struct {
+		Src   string `json:"src"`
+		Url   string `json:"url"`
+		Descr string `json:"descr"`
+		Image string `json:"image"`
+		SrcId int    `json:"src_id"`
+	} `json:"info"`
+	Image   string `json:"image"`
+	Preview struct {
+		Source string `json:"source"`
+		Height int    `json:"height"`
+		Width  int    `json:"width"`
+	} `json:"preview"`
+	Point struct {
+		Lon float64 `json:"lon"`
+		Lat float64 `json:"lat"`
+	} `json:"point"`
+}
